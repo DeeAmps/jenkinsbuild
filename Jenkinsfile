@@ -12,15 +12,28 @@ pipeline {
                 sh 'npm install'
             }
         }
+
         stage('Test') {
             steps {
                 echo 'Running tests'
                 sh 'npm test'
             }
         }
-        stage('Deploy') {
+        
+        stage('Building Docker image') {
             steps {
-                echo 'Deploying..'
+                echo 'Building docker image..'
+                sh 'docker build -t deeamps/nodejenkins .'
+            }
+        }
+
+        stage ('Push to Docker Hub') {
+            steps {
+                withCredentials([usernamePassword(credentialsId: 'dockerhub', usernameVariable: 'DOCKER_USERNAME', passwordVariable: 'DOCKER_PASSWORD')], {
+                    sh 'docker login -u $DOCKER_USERNAME -p $DOCKER_PASSWORD'
+                    sh 'docker push deeamps/nodejenkins'
+                })
+                
             }
         }
     }
